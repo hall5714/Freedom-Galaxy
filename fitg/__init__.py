@@ -1,0 +1,1 @@
+from fitg import main
