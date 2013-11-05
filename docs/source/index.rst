@@ -11,6 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+.. automodule:: fitg.backend.event
+   :members:
 
 
 Indices and tables
