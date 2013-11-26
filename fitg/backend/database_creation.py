@@ -11,6 +11,27 @@ from sqlalchemy import *
 from dataSnag import *
 from orm import *
 
+import re
+
+def data_parser(file_name):
+    """
+    For given file_name, parse lines into a list of lists of data.
+
+    Uses the regular expression '[A-Za-z0-9/ \"\'\*\.\-]+' to capture
+    groups of data; ignores empty lines and those starting with '#'
+
+    This function replaces commaOnly etc.
+
+    """
+    data_list = []
+    with open(file_name) as data:
+        for line in data:  # iterate over lines in the file
+            if not line.strip().startswith('#') and line.strip():
+            # not a comment and exists
+                data_list.append([match.strip() for match in
+                                  re.split(r"[A-Za-z0-9/ \"\'\*\.\-]+",
+                                           line)])
+    return data_list
 
 def loadDatabase():
     print "Loading database"
@@ -26,30 +47,30 @@ def loadDatabase():
 
     #These are the lists returned by dataSnag's functions. Necessary for the database.
 
-    #actionList = commaWithSpace("action.dat")
+    #actionList = data_parser("action.dat")
     #arc.dat: Needed for Province Game
     #backdoor.dat: Scenario
-    #ccList = commaOnly("cc_tab.dat") Character Combat Chart is static and not needing of DB
-    charList = commaOnly("./dat_files/charactr.dat")
-    #detectList = commaOnly("detect.dat") Detection Chart is static
+    #ccList = data_parser("cc_tab.dat") Character Combat Chart is static and not needing of DB
+    charList = data_parser("./dat_files/charactr.dat")
+    #detectList = data_parser("detect.dat") Detection Chart is static
     #distance.dat: Needed for Province Game
     #egrix.dat: Scenario
-    environList = commaOnly("./dat_files/environ.dat")
+    environList = data_parser("./dat_files/environ.dat")
     #galactic.dat: Scenario
     #galevent.dat: Needed for Galactic Game
     #guistar.dat: Scenario file. Necessary?
     #helsinki.dat: Scenario
     #lookup.dat: Needed for Galactic Game.
-    #milCombatList = commaOnly("milcomb.dat") Military Combat Chart is static
-    milunitsList = commaWithSpace("./dat_files/military_units.dat")
+    #milCombatList = data_parser("milcomb.dat") Military Combat Chart is static
+    milunitsList = data_parser("./dat_files/military_units.dat")
     #orlog.dat: Scenario
     #path.dat: Need key, no idea.
-    planetList = commaOnly("./dat_files/planet.dat")
-    possessionList = commaWithSpace("./dat_files/possessn.dat")
+    planetList = data_parser("./dat_files/planet.dat")
+    possessionList = data_parser("./dat_files/possessn.dat")
     #possimg.dat: Discuss. Need to be stored for Client?
-    raceList = raceSnag("./dat_files/races.dat")
+    raceList = data_parser("./dat_files/races.dat")
     #sov_hnd.dat: Need key, not star system, used by Environ
-    #spaceshipList = commaOnly("spacship.dat")
+    #spaceshipList = data_parser("spacship.dat")
     #strategy.dat: Galactic Game
     #varu.dat: Scenario
 
