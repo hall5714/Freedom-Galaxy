@@ -149,15 +149,15 @@ def loadDatabase():
 
 # Test data for Stack manipulation and others
 
-    temp = Stack(3111)
-    temp.characters = [ session.query(Character).filter_by(name = 'Adam Starlight').one(),
-                        session.query(Character).filter_by(name = 'Zina Adora').one()]
-    temp.characters[0].possessions = [ session.query(Possession).filter_by(name
+    temp = Stacks(3111)
+    temp.characters = [ session.query(Characters).filter_by(name = 'Adam Starlight').one(),
+                        session.query(Characters).filter_by(name = 'Zina Adora').one()]
+    temp.characters[0].possessions = [ session.query(Possessions).filter_by(name
                                         = 'Star Cruiser').one()]
     #temp.characters[0].detected = True
     session.add(temp)
-    temp = Stack(3111)
-    temp.characters = [ session.query(Character).filter_by(name = 'Senator Dermond').one()]
+    temp = Stacks(3111)
+    temp.characters = [ session.query(Characters).filter_by(name = 'Senator Dermond').one()]
     session.add(temp)
 # More Test stacks.
 #    temp = Stack(3112)
