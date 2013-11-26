@@ -207,7 +207,7 @@ class Possessions(Base, UniqueNameMixin):
                                                           self.stat1)
 
 class Races(Base, UniqueNameMixin):
-    environ = Column(String)
+    environ = Column(String, primary_key=True)
     combat = Column(Integer)
     endurance = Column(Integer)
     firefight = Column(Boolean)
