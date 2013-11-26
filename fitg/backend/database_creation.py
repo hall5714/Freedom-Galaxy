@@ -17,20 +17,32 @@ def data_parser(file_name):
     """
     For given file_name, parse lines into a list of lists of data.
 
-    Uses the regular expression '[A-Za-z0-9/ \"\'\*\.\-]+' to capture
+    Uses the regular expression '[A-Z0-9/ "'*.\-]+' to capture
     groups of data; ignores empty lines and those starting with '#'
 
-    This function replaces commaOnly etc.
+    Regular expression explanation: [] indicates a character set, with
+    the +, it matches any string consisting of one or more of those
+    characters. Using the IGNORECASE flag, we need only specify the
+    alphabet by the range A-Z, the digits 0-9, forward slash, space,
+    double quote, single quote, asterisk, period, and hyphen. Note
+    that the last is the only one that needs to be escaped inside a
+    character set. The expression is encapsulated by triple quotes to
+    allow for easy inclusing of the quote characters, and is made
+    'raw' with the r prefix, so that the backslash can be used
+    literally. All these characters were founda as valid data in some
+    data file.
+
+    This function replaces those that were found in dataSnag.py
 
     """
     data_list = []
+    regex = re.compile(r"""[A-Z0-9/ "'*.\-]+""", flags=re.IGNORECASE)
     with open(file_name) as data:
         for line in data:  # iterate over lines in the file
             if not line.strip().startswith('#') and line.strip():
             # not a comment and exists
                 data_list.append([match.strip() for match in
-                                  re.split(r"[A-Za-z0-9/ \"\'\*\.\-]+",
-                                           line)])
+                                  re.findall(regex, line)])
     return data_list
 
 def loadDatabase():
