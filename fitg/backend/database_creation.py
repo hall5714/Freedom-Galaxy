@@ -82,7 +82,7 @@ def loadDatabase():
 
     #The following for loops load up the database with relevant info pulled from the .dat files.
     for list in charList:
-        temp = Character(list[0], list[1], list[2], list[3], list[4], list[5], list[6], list[7], 
+        temp = Characters(list[0], list[1], list[2], list[3], list[4], list[5], list[6], list[7], 
                           list[8], list[9], list[10], list[11], list[12])
         session.add(temp)
     #session.commit()
@@ -90,7 +90,7 @@ def loadDatabase():
 
     for list in environList:
         if list[8] > 3:
-            temp = Environ(list[0], list[1], list[2], list[3], list[4], 
+            temp = Environs(list[0], list[1], list[2], list[3], list[4], 
                            list[5], list[6], list[7], -1, list[8],int(list[0])/10)
         else:
             temp = Environ(list[0], list[1], list[2], list[3], list[4], 
@@ -100,15 +100,15 @@ def loadDatabase():
     i = 1
 
     for list in milunitsList:
-        temp = MilitaryUnit(list[0], list[1], list[2], list[3], list[4])
+        temp = MilitaryUnits(list[0], list[1], list[2], list[3], list[4])
         session.add(temp)
     session.commit()
 
     for list in planetList:
-        temp = Planet(list[0], list[1], list[2], list[3], list[5])
+        temp = Planets(list[0], list[1], list[2], list[3], list[5])
         session.add(temp)
         # Implementing Orbit Boxes as Environ # 0 for each planet
-        temp = Environ(list[0]+'0', 'O', '50', None, '0', '0', '0', 'None', '0', '0', list[0])
+        temp = Environs(list[0]+'0', 'O', '50', None, '0', '0', '0', 'None', '0', '0', list[0])
         session.add(temp)
     session.commit()
 
@@ -117,21 +117,21 @@ def loadDatabase():
         if len(list) == 2:
             continue
         elif len(list) == 4:
-            temp = Possession(list[0], list[1], list[2], list[3], " ", " ", " ", " ")
+            temp = Possessions(list[0], list[1], list[2], list[3], " ", " ", " ", " ")
         elif len(list) == 5:
-            temp = Possession(list[0], list[1], list[2], list[3], list[4], " ", " ", " ")
+            temp = Possessions(list[0], list[1], list[2], list[3], list[4], " ", " ", " ")
         elif len(list) == 6:
-            temp = Possession(list[0], list[1], list[2], list[3], list[4], list[5], " ", " ")
+            temp = Possessions(list[0], list[1], list[2], list[3], list[4], list[5], " ", " ")
         elif len(list) == 7:
-            temp = Possession(list[0], list[1], list[2], list[3], list[4], list[5], list[6], " ")
+            temp = Possessions(list[0], list[1], list[2], list[3], list[4], list[5], list[6], " ")
         session.add(temp)
 
 
     for list in raceList:
         if list[4] == '*':
-            temp = Race(list[0], list[1], list[2], list[3], False)
+            temp = Races(list[0], list[1], list[2], list[3], False)
         else:
-            temp = Race(list[0], list[1], list[2], list[3], True)
+            temp = Races(list[0], list[1], list[2], list[3], True)
         session.add(temp)
     session.commit()
 
