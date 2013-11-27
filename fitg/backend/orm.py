@@ -51,29 +51,6 @@ class Characters(Base, UniqueNameMixin):
     stack_id = Column(Integer, ForeignKey('stacks.id_'))
     stack = relationship('Stacks', backref=backref('characters',
                                                    order_by=combat))
-
-    def __init__(self, name, gif, title, race, side, combat,
-                 endurance, intelligence, leadership, diplomacy,
-                 navigation, homeworld, bonuses):
-        self.name = name
-        self.gif = gif
-        self.title = title
-        self.race = race
-        self.side = side
-        self.combat = combat
-        self.endurance = endurance
-        self.intelligence = intelligence
-        self.leadership = leadership
-        self.diplomacy = diplomacy
-        self.navigation = navigation
-        self.homeworld = homeworld
-        self.bonuses = bonuses
-        self.wounds = 0
-        self.detected = False
-        self.possession = False
-        self.active = True
-        self.captive = False
-
     def __repr__(self):
         return "<Character('{0}', '{1}', '{2}')>".format(self.name,
                                                          self.title,
@@ -97,21 +74,6 @@ class Environs(Base, IDMixin):
                                                  order_by=lambda:
                                                  Environs.id_))
 
-    def __init__(self, id_, type_, size, race_name, starfaring,
-                 resources, starresources, monster, coup, sov,
-                 planet_id):
-        self.id_ = id_
-        self.type_ = type_
-        self.size = size
-        self.race_name = race_name
-        self.starfaring = starfaring
-        self.resources = resources
-        self.starresources = starresources
-        self.monster = monster
-        self.coup = coup
-        self.sov = sov
-        self.planet_id = planet_id
-
     def __repr__(self):
         return "<Environ('{0}', '{1}', '{2}')>".format(self.id_,
                                                        self.type_,
@@ -127,15 +89,6 @@ class MilitaryUnits(Base, IDMixin):
     stack_id = Column(Integer, ForeignKey('stacks.id_'))
     stack = relationship('Stacks', backref=backref('militaryunits',
                                                   order_by=type_))
-
-    def __init__(self, type_, side, environ_combat, space_combat,
-                 mobile):
-        self.type_ = type_
-        self.side = side
-        self.wounds = 0
-        self.environ_combat = environ_combat
-        self.space_combat = space_combat
-        self.mobile = mobile
 
     def __repr__(self):
         return "<MilitaryUnit('{0}', '{1}', '{2}')>".format(self.id_,
@@ -160,20 +113,14 @@ class Missions(Base, IDMixin):
 
 class Planets(Base, IDMixin, NameMixin):
     race = Column(String)
-    loyalty = Column(Integer)
-    numEnvirons = Column(Integer)
-
-    def __init__(self, id_, name, race, loyalty, numEnvirons):
-        self.id_ = id_
-        self.name = name
-        self.race = race
-        self.loyalty = loyalty
-        self.numEnvirons = numEnvirons
+    sloyalty = Column(Integer)
+    aloyalty = Column(Integer)
+    environs_num = Column(Integer)
 
     def __repr__(self):
         return "<Planet('{0}', '{1}', '{2}')>".format(self.id_,
                                                       self.race,
-                                                      self.numEnvirons)
+                                                      self.environs_num)
 
 class Possessions(Base, UniqueNameMixin):
     type_ = Column(String)  # Type_ of possession.
@@ -189,18 +136,6 @@ class Possessions(Base, UniqueNameMixin):
                                                        order_by=lambda:
                                                        Possessions.name))
 
-    def __init__(self, type_, name, gif, stat1, stat2, stat3, stat4,
-                 owner_name):
-        self.type_ = type_
-        self.name = name
-        self.gif = gif
-        self.stat1 = stat1
-        self.stat2 = stat2
-        self.stat3 = stat3
-        self.stat4 = stat4
-        self.owner_name = owner_name
-        self.damaged = False
-
     def __repr__(self):
         return "<Possession('{0}', '{1}', '{2}')>".format(self.type_,
                                                           self.name,
@@ -211,13 +146,6 @@ class Races(Base, UniqueNameMixin):
     combat = Column(Integer)
     endurance = Column(Integer)
     firefight = Column(Boolean)
-
-    def __init__(self, name, environ, combat, endurance, firefight):
-        self.name = name
-        self.environ = environ
-        self.combat = combat
-        self.endurance = endurance
-        self.firefight = firefight
 
     def __repr__(self):
         return "<Race('{0}', '{1}', '{2}')>".format(self.name,
