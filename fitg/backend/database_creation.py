@@ -12,6 +12,8 @@ Tables/data files currently implemented:
 
 To-do list for current ORM:
     - Missions
+    - Environs: figure out how soverigns work in the dat_file
+    - Possesssions: figure out what string stats mean (stat1-32)
 
 We could implement these charts in the database and use stored
 procedures to return combat/detection results:
@@ -82,8 +84,8 @@ def load_database():
         'Environs': {
             'path': 'environ.dat',
             'defaults': {},
-            'keys': ('id_', 'type_', 'size', 'starfaring', 'resources',
-                     'starresources', 'monster', 'coup', 'sov')},
+            'keys': ('id_', 'type_', 'size', 'race_name', 'starfaring',
+                     'resources', 'starresources', 'monster', 'coup_sov')},
         'MilitaryUnits': {
             'path': 'military_units.dat',
             'defaults': {'wounds': 0},
@@ -109,4 +111,8 @@ def load_database():
         for values in data_parser('./dat_files/'+info['path']):
             session.add(getattr(orm, table)(**dict(
                 zip(info['keys'], values), **info['defaults'])))
+    session.commit()
+
+    for planet_id in session.query(orm.Planets.id_).all():
+        session.add(orm.Environs(id_=planet_id[0]*10, type_='O', size=50))
     session.commit()

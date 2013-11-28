@@ -31,19 +31,19 @@ class Base(object):
 Base = declarative_base(cls=Base)
 
 class Characters(Base, UniqueNameMixin):
-    gif = Column(String)  #Does the DB need this?
-    title = Column(String)  #Long title of character
-    race = Column(String)  #Character's Race
-    side = Column(String)  #Team: 'Rebel' or 'Emperial'
-    combat = Column(Integer)  #Combat strength
-    endurance = Column(Integer)  #Endurance rating
-    intelligence = Column(Integer)  #Intelligence rating
-    leadership = Column(Integer)  #Leadership rating
-    diplomacy = Column(Integer)  #Diplomacy rating
-    navigation = Column(Integer)  #Navigation rating
-    homeworld = Column(String)  #Character's Homeworld
-    bonuses = Column(String)  #Special Bonuses, unclear format
-    wounds = Column(Integer)  #Num of wounds
+    gif = Column(String)
+    title = Column(String)
+    race = Column(String)
+    side = Column(String)
+    combat = Column(Integer)
+    endurance = Column(Integer)
+    intelligence = Column(Integer)
+    leadership = Column(Integer)
+    diplomacy = Column(Integer)
+    navigation = Column(Integer)
+    homeworld = Column(String)
+    bonuses = Column(String)
+    wounds = Column(Integer)
     detected = Column(Boolean)
     possession = Column(Boolean)
     active = Column(Boolean)
@@ -73,6 +73,28 @@ class Environs(Base, IDMixin):
     race = relationship('Races', backref=backref('environs',
                                                  order_by=lambda:
                                                  Environs.id_))
+
+    def __init__(self, **kwargs):
+        """
+        Easiest way to set a 'derived column', that is a column whose
+        value is dependent on another column (in this case, planet_id
+        being the first three digits of id_), is unfortunately in the
+        constructor (trust me, hybrid_method/property, declared_attr,
+        etc. don't work). So we mimic SQLAlchemy's default constructor
+        by iterating over kwargs, then handle planet_id separately.
+
+        """
+        for attribute, value in kwargs.iteritems():
+            setattr(self, attribute, value)
+        self.planet_id = int(int(kwargs['id_'])/10)
+        try:
+            if int(kwargs['coup_sov']) > 3:
+                self.sov, self.coup = kwargs['coup_sov'], -1
+            else:
+                self.sov, self.coup = -1, kwargs['coup_sov']
+        except KeyError:
+            # coup not passed for orbits
+            pass
 
     def __repr__(self):
         return "<Environ('{0}', '{1}', '{2}')>".format(self.id_,
@@ -114,7 +136,7 @@ class Missions(Base, IDMixin):
 class Planets(Base, IDMixin, NameMixin):
     race = Column(String)
     sloyalty = Column(Integer)
-    aloyalty = Column(Integer)
+    aloyalty = Column(Integer)  # We may choose to ignore this
     environs_num = Column(Integer)
 
     def __repr__(self):
