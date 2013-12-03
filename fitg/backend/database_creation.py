@@ -1,133 +1,118 @@
-#Author: Greg Donaldson
-#Revisions: Jeff Crocker
-#Purpose: Created for the purpose of pulling data from the .dat files for Freedom in the Galaxy. 
-#Primarily for use by the backend team. This will allow for a database to be used.
+"""
+This module parses the provided data files, maps the data to our
+ORM, and inserts the neccesary objects to populate the database.
 
-#os is needed to make sure we don't connect to a pre-existing database.
-#The others are for creating the database.
+Tables/data files currently implemented:
+    - Characters
+    - Environs
+    - MilitaryUnits
+    - Planets
+    - Possessions
+    - Races
 
-import os
-from sqlalchemy import *
-from dataSnag import *
-from orm import *
+To-do list for current ORM:
+    - Missions
+    - Environs: figure out how soverigns work in the dat_file
+    - Possesssions: figure out what string stats mean (stat1-32)
 
+We could implement these charts in the database and use stored
+procedures to return combat/detection results:
+    - Character Combat Chart
+    - Detection Chart
+    - Military Combat Chart
 
-def loadDatabase():
-    print "Loading database"
+"""
+import re
 
-    #Alright, time to check if the database already exists. If it does, get rid of it. 
-    #If it doesn't, don't.
-    try:
-        os.remove("Freedom.db")
-        db = create_engine('sqlite:///Freedom.db')
-    except:      
-        db = create_engine('sqlite:///Freedom.db')
+import orm
 
+def data_parser(file_name):
+    """
+    For given file_name, parse lines into a list of lists of data.
 
-    #These are the lists returned by dataSnag's functions. Necessary for the database.
+    Uses the regular expression '[A-Z0-9/ "'*.\-]+' to capture
+    groups of data; ignores empty lines and those starting with '#'
 
-    #actionList = commaWithSpace("action.dat")
-    #arc.dat: Needed for Province Game
-    #backdoor.dat: Scenario
-    #ccList = commaOnly("cc_tab.dat") Character Combat Chart is static and not needing of DB
-    charList = commaOnly("./dat_files/charactr.dat")
-    #detectList = commaOnly("detect.dat") Detection Chart is static
-    #distance.dat: Needed for Province Game
-    #egrix.dat: Scenario
-    environList = commaOnly("./dat_files/environ.dat")
-    #galactic.dat: Scenario
-    #galevent.dat: Needed for Galactic Game
-    #guistar.dat: Scenario file. Necessary?
-    #helsinki.dat: Scenario
-    #lookup.dat: Needed for Galactic Game.
-    #milCombatList = commaOnly("milcomb.dat") Military Combat Chart is static
-    milunitsList = commaWithSpace("./dat_files/military_units.dat")
-    #orlog.dat: Scenario
-    #path.dat: Need key, no idea.
-    planetList = commaOnly("./dat_files/planet.dat")
-    possessionList = commaWithSpace("./dat_files/possessn.dat")
-    #possimg.dat: Discuss. Need to be stored for Client?
-    raceList = raceSnag("./dat_files/races.dat")
-    #sov_hnd.dat: Need key, not star system, used by Environ
-    #spaceshipList = commaOnly("spacship.dat")
-    #strategy.dat: Galactic Game
-    #varu.dat: Scenario
+    Regular expression explanation: [] indicates a character set, with
+    the +, it matches any string consisting of one or more of those
+    characters. Using the IGNORECASE flag, we need only specify the
+    alphabet by the range A-Z, the digits 0-9, forward slash, space,
+    double quote, single quote, asterisk, period, and hyphen. Note
+    that the last is the only one that needs to be escaped inside a
+    character set. The expression is encapsulated by triple quotes to
+    allow for easy inclusing of the quote characters, and is made
+    'raw' with the r prefix, so that the backslash can be used
+    literally. All these characters were founda as valid data in some
+    data file.
 
+    This function replaces those that were found in dataSnag.py
 
-    session = Session()
-    Base.metadata.create_all(db)    #Create the database.
+    """
+    data_list = []
+    regex = re.compile(r"""[A-Z0-9/ "'*.\-]+""", flags=re.IGNORECASE)
+    with open(file_name) as data:
+        for line in data:  # iterate over lines in the file
+            if not line.strip().startswith('#') and line.strip():
+            # not a comment and exists
+                data_list.append([match.strip() for match in
+                                  re.findall(regex, line)])
+    return data_list
 
-    i = 1
+def load_database():
+    """
+    This function creates a database session to which it adds rows
+    of data to the database.
 
-    #The following for loops load up the database with relevant info pulled from the .dat files.
-    for list in charList:
-        temp = Character(list[0], list[1], list[2], list[3], list[4], list[5], list[6], list[7], 
-                          list[8], list[9], list[10], list[11], list[12])
-        session.add(temp)
-    #session.commit()
+    The tables dict represents a mapping from the data files to our
+    ORM. Its outermost keys represent the tables defined in orm, the
+    values are themselves dicts. This inner dicts contain the path
+    (that is, name of the data file in ./dat_files), a defaults dict
+    that allows specification of columns whose values are not in the
+    data files, and a keys tuple which maps linearly from the table's
+    columns to the position of the data field in the file.
 
+    """
+    session = orm.Session()
+    tables = {
+        'Characters': {
+            'path': 'charactr.dat',
+            'defaults': {'wounds': 0, 'detected': False, 'possession': False,
+                         'active': True, 'captive': False},
+            'keys': ('name', 'gif', 'title', 'race', 'side', 'combat',
+                     'endurance', 'intelligence', 'leadership', 'diplomacy',
+                     'navigation', 'homeworld', 'bonuses')},
+        'Environs': {
+            'path': 'environ.dat',
+            'defaults': {},
+            'keys': ('id_', 'type_', 'size', 'race_name', 'starfaring',
+                     'resources', 'starresources', 'monster', 'coup_sov')},
+        'MilitaryUnits': {
+            'path': 'military_units.dat',
+            'defaults': {'wounds': 0},
+            'keys': ('type_', 'side', 'environ_combat', 'space_combat',
+                     'mobile')},
+        'Planets': {
+            'path': 'planet.dat',
+            'defaults': {},
+            'keys': ('id_', 'name', 'race', 'sloyalty', 'aloyalty',
+                     'environs_num')},
+        'Possessions': {
+            'path': 'possessn.dat',
+            'defaults': {'damaged': False},
+            'keys': ('type_', 'name', 'gif', 'stat1', 'stat2', 'stat3',
+                     'stat4', 'owner_name')},
+        'Races': {
+            'path': 'races.dat',
+            'defaults': {},
+            'keys': ('name', 'environ', 'combat', 'endurance', 'firefight')}
+    }
 
-    for list in environList:
-        if list[8] > 3:
-            temp = Environ(list[0], list[1], list[2], list[3], list[4], 
-                           list[5], list[6], list[7], -1, list[8],int(list[0])/10)
-        else:
-            temp = Environ(list[0], list[1], list[2], list[3], list[4], 
-                           list[5], list[6], list[7], list[8], -1,int(list[0])/10)
-        session.add(temp)
+    for table, info in tables.iteritems():
+        for values in data_parser('./dat_files/'+info['path']):
+            session.add(getattr(orm, table)(**dict(
+                zip(info['keys'], values), **info['defaults'])))
     session.commit()
-    i = 1
 
-    for list in milunitsList:
-        temp = MilitaryUnit(list[0], list[1], list[2], list[3], list[4])
-        session.add(temp)
-    session.commit()
-
-    for list in planetList:
-        temp = Planet(list[0], list[1], list[2], list[3], list[5])
-        session.add(temp)
-        # Implementing Orbit Boxes as Environ # 0 for each planet
-        temp = Environ(list[0]+'0', 'O', '50', None, '0', '0', '0', 'None', '0', '0', list[0])
-        session.add(temp)
-    session.commit()
-
-    for list in possessionList:
-
-        if len(list) == 2:
-            continue
-        elif len(list) == 4:
-            temp = Possession(list[0], list[1], list[2], list[3], " ", " ", " ", " ")
-        elif len(list) == 5:
-            temp = Possession(list[0], list[1], list[2], list[3], list[4], " ", " ", " ")
-        elif len(list) == 6:
-            temp = Possession(list[0], list[1], list[2], list[3], list[4], list[5], " ", " ")
-        elif len(list) == 7:
-            temp = Possession(list[0], list[1], list[2], list[3], list[4], list[5], list[6], " ")
-        session.add(temp)
-
-
-    for list in raceList:
-        if list[4] == '*':
-            temp = Race(list[0], list[1], list[2], list[3], False)
-        else:
-            temp = Race(list[0], list[1], list[2], list[3], True)
-        session.add(temp)
-    session.commit()
-
-# Test data for Stack manipulation and others
-
-    temp = Stack(3111)
-    temp.characters = [ session.query(Character).filter_by(name = 'Adam Starlight').one(),
-                        session.query(Character).filter_by(name = 'Zina Adora').one()]
-    temp.characters[0].possessions = [ session.query(Possession).filter_by(name
-                                        = 'Star Cruiser').one()]
-    #temp.characters[0].detected = True
-    session.add(temp)
-    temp = Stack(3111)
-    temp.characters = [ session.query(Character).filter_by(name = 'Senator Dermond').one()]
-    session.add(temp)
-# More Test stacks.
-#    temp = Stack(3112)
-#    temp.militaryunits = [ session.query(MilitaryUnits).filter_by
-#                         (side = 'Imperial', type = 'Militia'
+    for planet_id in session.query(orm.Planets.id_).all():
+        session.add(orm.Environs(id_=planet_id[0]*10, type_='O', size=50))
     session.commit()
