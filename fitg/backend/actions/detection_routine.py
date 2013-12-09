@@ -2,7 +2,7 @@
 Authored by Ben Cumber
 Currently just the Detection Routine in the Combat Class.
 """
-import random
+from random import randint
 from orm import *
 from database_creation import loadDatabase
 class Combat:
