@@ -69,7 +69,7 @@ class FreedomService(rpyc.Service):
 
         return response
 
-    def exposed_get_state(self, object_type, object_id=None):
+    def exposed_get_state(self, object_type, object_id=None, verbose=False):
         """Get the state of an object
 
         :param object_type: The type of object to get state on ("environ", "planet" etc)
@@ -87,7 +87,10 @@ class FreedomService(rpyc.Service):
 
             result = self.actions.game.get_object(session, object_type, object_id)
 
-            return self.response('get_state', request, result[0], result[1])
+            if verbose:
+                return self.response('get_state', request, result[0], result[1])
+            else:
+                return self.response('get_state', request, result[0], result[1])['response'][object_type.lower()]
 
     def exposed_turn_state(self, validate_only=False):
         """Returns the current turn state.
